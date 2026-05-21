@@ -1,37 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-const CLINICS = [
-  { code: 'BORSE',   short: 'Borse' },
-  { code: 'BAVDHAN', short: 'Bavdhan' },
-  { code: 'WAKAD',   short: 'Wakad' },
-  { code: 'PS',      short: 'Pimple Saudagar' },
-  { code: 'BANER',   short: 'Baner' },
-  { code: 'PASHAN',  short: 'Pashan' },
-  { code: 'SVHA',    short: 'SVH Aundh' },
-  { code: 'SVHW',    short: 'SVH Wakad' },
+const CLINICS: { code: string; short: string; label: string }[] = [
+  { code: 'SVHW',    short: 'SVH Wakad',         label: 'Saishree Vitalife Hospital Wakad' },
+  { code: 'SVHA',    short: 'SVH Aundh',          label: 'Saishree Vitalife Aundh' },
+  { code: 'BORSE',   short: 'Borse',              label: 'Saishree Vitalife Borse' },
+  { code: 'BAVDHAN', short: 'Bavdhan',            label: 'Saishree Vitalife Bavdhan' },
+  { code: 'WAKAD',   short: 'Wakad Clinic',       label: 'Saishree Vitalife Wakad' },
+  { code: 'PS',      short: 'Pimple Saudagar',    label: 'Saishree Vitalife Pimple Saudagar' },
+  { code: 'BANER',   short: 'Baner',              label: 'Saishree Vitalife Baner' },
+  { code: 'PASHAN',  short: 'Pashan',             label: 'Saishree Vitalife Pashan' },
 ];
 
-export default function SendPage() {
-  const router             = useRouter();
-  const [clinic, setClinic]     = useState('');
-  const [mobile, setMobile]     = useState('');
-  const [sending, setSending]   = useState(false);
-  const [success, setSuccess]   = useState(false);
-  const [error, setError]       = useState('');
+function SendForm() {
+  const router        = useRouter();
+  const params        = useSearchParams();
+  const clinicParam   = (params.get('clinic') ?? '').toUpperCase();
+  const preselected   = CLINICS.find(c => c.code === clinicParam) ?? null;
+
+  const [clinic, setClinic]   = useState(preselected?.code ?? '');
+  const [mobile, setMobile]   = useState('');
+  const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError]     = useState('');
 
   useEffect(() => {
-    if (sessionStorage.getItem('grr_authed') !== '1') {
+    // Only enforce PIN when no clinic is pre-selected via URL
+    if (!preselected && sessionStorage.getItem('grr_authed') !== '1') {
       router.replace('/');
     }
-  }, [router]);
+  }, [preselected, router]);
 
   const handleSend = async () => {
     const cleaned = mobile.replace(/\D/g, '');
     if (cleaned.length !== 10) { setError('Enter a valid 10-digit mobile number.'); return; }
-    if (!clinic) { setError('Please select a clinic.'); return; }
+    if (!clinic)               { setError('Please select a clinic.'); return; }
 
     setError('');
     setSending(true);
@@ -74,18 +79,35 @@ export default function SendPage() {
         </div>
       ) : (
         <div className="send-card">
-          <div style={{ fontWeight: 700, fontSize: 15, color: '#333' }}>Select Clinic</div>
-          <div className="clinic-grid">
-            {CLINICS.map(c => (
-              <div
-                key={c.code}
-                className={`clinic-btn${clinic === c.code ? ' selected' : ''}`}
-                onClick={() => setClinic(c.code)}
-              >
-                {c.short}
+          {preselected ? (
+            <div style={{
+              background: '#f47216',
+              color: '#fff',
+              borderRadius: 8,
+              padding: '12px 16px',
+              fontWeight: 700,
+              fontSize: 17,
+              textAlign: 'center',
+              letterSpacing: 0.3,
+            }}>
+              {preselected.label}
+            </div>
+          ) : (
+            <>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#333' }}>Select Clinic</div>
+              <div className="clinic-grid">
+                {CLINICS.map(c => (
+                  <div
+                    key={c.code}
+                    className={`clinic-btn${clinic === c.code ? ' selected' : ''}`}
+                    onClick={() => setClinic(c.code)}
+                  >
+                    {c.short}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
 
           <label className="field-label">
             Patient Mobile Number
@@ -96,6 +118,7 @@ export default function SendPage() {
               maxLength={10}
               placeholder="10-digit mobile number"
               value={mobile}
+              autoFocus
               onChange={e => { setMobile(e.target.value.replace(/\D/g, '')); setError(''); }}
             />
             <span className="mobile-hint">Indian number without country code — e.g. 9876543210</span>
@@ -113,5 +136,13 @@ export default function SendPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SendPage() {
+  return (
+    <Suspense>
+      <SendForm />
+    </Suspense>
   );
 }

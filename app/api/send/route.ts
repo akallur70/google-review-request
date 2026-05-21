@@ -33,7 +33,8 @@ export async function POST(request: Request) {
     await supabase.from('review_requests').insert([{
       clinic,
       mobile,
-      sent_at: new Date().toISOString(),
+      sent_from: process.env.ULTRAMSG_WHATSAPP_NUMBER ?? null,
+      sent_at:   new Date().toISOString(),
     }]);
 
     return NextResponse.json({ success: true });
