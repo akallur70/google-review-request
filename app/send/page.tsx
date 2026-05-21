@@ -33,6 +33,17 @@ function SendForm() {
     }
   }, [preselected, router]);
 
+  useEffect(() => {
+    // Point the manifest at the clinic-specific one so "Add to Home Screen"
+    // captures the correct start_url (with ?clinic=XX)
+    if (!preselected) return;
+    const existing = document.querySelector('link[rel="manifest"]');
+    const link = (existing ?? document.createElement('link')) as HTMLLinkElement;
+    link.rel  = 'manifest';
+    link.href = `/manifest/${preselected.code}`;
+    if (!existing) document.head.appendChild(link);
+  }, [preselected]);
+
   const handleSend = async () => {
     const cleaned = mobile.replace(/\D/g, '');
     if (cleaned.length !== 10) { setError('Enter a valid 10-digit mobile number.'); return; }
