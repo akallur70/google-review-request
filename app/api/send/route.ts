@@ -30,7 +30,8 @@ export async function POST(request: Request) {
 
     await sendReviewLink({ clinic, clinicName, reviewUrl, mobile });
 
-    await supabase.from('review_requests').insert([{
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('review_requests') as any).insert([{
       clinic,
       mobile,
       sent_from: process.env.ULTRAMSG_WHATSAPP_NUMBER ?? null,
