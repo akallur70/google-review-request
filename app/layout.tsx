@@ -1,10 +1,13 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
+
+export const viewport: Viewport = {
+  themeColor: '#f47216',
+};
 
 export const metadata: Metadata = {
   title: 'Saishree Vitalife — Google Review',
   description: 'Send Google Review request to patient',
-  themeColor: '#f47216',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
